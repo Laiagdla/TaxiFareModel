@@ -6,11 +6,36 @@ path= os.path.abspath(os.path.dirname(__file__))
 AWS_BUCKET_PATH = "s3://wagon-public-datasets/taxi-fare-train.csv"
 local_csv = os.path.join(path,'data/train_10k.csv')
 
-def get_data(nrows=10_000):
-    '''returns a DataFrame with nrows from s3 bucket'''
-    df = pd.read_csv(local_csv, nrows=nrows)
-    return df
 
+### GCP Storage - - - - - - - - - - - - - - - - - - - - - -
+
+BUCKET_NAME = 'wagon-data-871-laia'
+
+##### Data  - - - - - - - - - - - - - - - - - - - - - - - -
+
+# train data file location
+# /!\ here you need to decide if you are going to train using the provided and uploaded data/train_1k.csv sample file
+# or if you want to use the full dataset (you need need to upload it first of course)
+BUCKET_TRAIN_DATA_PATH = 'data/train_1k.csv'
+
+# model folder name (will contain the folders for all trained model versions)
+MODEL_NAME = 'taxifare'
+
+# model version folder name (where the trained model.joblib file will be stored)
+MODEL_VERSION = 'v1'
+
+
+# local run
+'''def get_data(nrows=10_000):
+    # returns a DataFrame with nrows from s3 bucket
+    df = pd.read_csv(local_csv, nrows=nrows)
+    return df'''
+
+# GCP run
+def get_data():
+    """method to get the training data (or a portion of it) from google cloud bucket"""
+    df = pd.read_csv(f"gs://{BUCKET_NAME}/{BUCKET_TRAIN_DATA_PATH}", nrows=1000)
+    return df
 
 def clean_data(df, test=False):
     df = df.dropna(how='any', axis='rows')
@@ -24,6 +49,29 @@ def clean_data(df, test=False):
     df = df[df["pickup_longitude"].between(left=-74.3, right=-72.9)]
     df = df[df["dropoff_latitude"].between(left=40, right=42)]
     df = df[df["dropoff_longitude"].between(left=-74, right=-72.9)]
+    return df
+
+def df_optimized(df, verbose=True, **kwargs):
+    """
+    Reduces size of dataframe by downcasting numeircal columns
+    :param df: input dataframe
+    :param verbose: print size reduction if set to True
+    :param kwargs:
+    :return: df optimized
+    """
+    in_size = df.memory_usage(index=True).sum()
+    # Optimized size here
+    for type in ["float", "integer"]:
+        l_cols = list(df.select_dtypes(include=type))
+        for col in l_cols:
+            df[col] = pd.to_numeric(df[col], downcast=type)
+            if type == "float":
+                df[col] = pd.to_numeric(df[col], downcast="integer")
+    out_size = df.memory_usage(index=True).sum()
+    ratio = (1 - round(out_size / in_size, 2)) * 100
+    GB = out_size / 1000000000
+    if verbose:
+        print("optimized size by {} % | {} GB".format(ratio, GB))
     return df
 
 

@@ -1,0 +1,15 @@
+artifact_uri: file:///home/laia/code/Laiagdla/TaxiFareModel/mlruns/1/6cd89ba1895c45eca986e7bfa38ed582/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: 6cd89ba1895c45eca986e7bfa38ed582
+run_uuid: 6cd89ba1895c45eca986e7bfa38ed582
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1653403718478
+status: 1
+tags: []
+user_id: unknown
